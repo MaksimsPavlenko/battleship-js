@@ -5,24 +5,25 @@ import lombok.extern.java.Log;
 import lv.ctco.javaschool.auth.control.UserStore;
 import lv.ctco.javaschool.auth.entity.domain.User;
 import lv.ctco.javaschool.game.control.GameStore;
-import lv.ctco.javaschool.game.entity.Game;
-import lv.ctco.javaschool.game.entity.GameDto;
-import lv.ctco.javaschool.game.entity.GameStatus;
+import lv.ctco.javaschool.game.entity.*;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.json.JsonObject;
+import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Path("/game")
 @Stateless
@@ -56,6 +57,28 @@ public class GameApi {
         }
     }
 
+    @GET
+    @RolesAllowed({"ADMIN", "USER"})
+    @Path("/cells")
+    public List<CellStateDto> getCells() {
+        User currentUser = userStore.getCurrentUser();
+        Optional<Game> game = gameStore.getStartedGameFor(currentUser, GameStatus.STARTED);
+        return game.map(g -> {
+            List<Cell> cells = gameStore.getCells(g, currentUser);
+            return cells.stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
+        }).orElseThrow(IllegalStateException::new);
+    }
+
+    private CellStateDto convertToDto(Cell cell) {
+        CellStateDto dto = new CellStateDto();
+        dto.setTargetArea(cell.isTargetArea());
+        dto.setAddress(cell.getAddress());
+        dto.setState(cell.getState());
+        return dto;
+    }
+
     @POST
     @RolesAllowed({"ADMIN", "USER"})
     @Path("/cells")
@@ -68,7 +91,7 @@ public class GameApi {
                 for (Map.Entry<String, JsonValue> pair : field.entrySet()) {
                     log.info(pair.getKey() + " - " + pair.getValue());
                     String addr = pair.getKey();
-                    String value = pair.getValue().toString();
+                    String value = ((JsonString) pair.getValue()).getString();
                     if ("SHIP".equals(value)) {
                         ships.add(addr);
                     }
@@ -99,16 +122,37 @@ public class GameApi {
     }
 
     @POST
-    @RolesAllowed({"ADMIN","USER"})
-    @Path("/fire")
-    public void doFire() {
+    @RolesAllowed({"ADMIN", "USER"})
+    @Path("/fire{address}")
+    public void doFire(@PathParam("address") String address) {
+        log.info("FIRE" + address);
+
+
         User currentUser = userStore.getCurrentUser();
         Optional<Game> game = gameStore.getOpenGameFor(currentUser);
         game.ifPresent(g -> {
+
+            User oppostionUser = g.getStrike(currentUser);
+            Optional<Cell> oposCell = gameStore.findCell(g, oppostionUser, address, false);
+            CellState oposCellState;
+            if(oposCell.isPresent()) {
+                oposCellState = oposCell.get().getState();
+            }
+            else {oposCellState=CellState.EMPTY;
+            }
+            if (oposCellState.equals(CellState.EMPTY)) {
+                gameStore.setCellState(g, currentUser, address, true, CellState.MISS);
+                gameStore.setCellState(g, oppostionUser, address, false, CellState.MISS);
+            }
+            else if (oposCellState.equals(CellState.SHIP)){
+                gameStore.setCellState(g, currentUser, address, true, CellState.HIT);
+                gameStore.setCellState(g, oppostionUser, address, false, CellState.HIT);
+            }
+
             boolean p1a = g.isPlayer1Active();
             g.setPlayer1Active(!p1a);
             g.setPlayer2Active(p1a);
         });
     }
-
 }
+

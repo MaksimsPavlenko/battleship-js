@@ -3,6 +3,7 @@ package lv.ctco.javaschool.game.entity;
 import lombok.Data;
 import lv.ctco.javaschool.auth.entity.domain.User;
 
+import javax.jws.soap.SOAPBinding;
 import javax.persistence.*;
 
 @Data
@@ -39,6 +40,18 @@ public class Game {
         } else if (player.equals(player2)) {
             player2Active = active;
         } else {
+            throw new IllegalArgumentException();
+        }
+    }
+
+public User getStrike(User player){
+        if (player.equals(player1)){
+            return player2;
+        }
+        else if(player.equals(player2)){
+            return player1;
+        }
+        else{
             throw new IllegalArgumentException();
         }
     }
