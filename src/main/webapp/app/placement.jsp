@@ -1,5 +1,4 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
@@ -32,20 +31,18 @@
 </div>
 <script>
     var data = {};
-
     function cellClicked(id) {
         var checkbox = document.getElementById(id);
         console.log(id + " " + checkbox.checked);
         data[id] = checkbox.checked ? "SHIP" : "EMPTY";
     }
-
     function ready() {
         console.log(JSON.stringify(data));
         fetch("<c:url value='/api/game/cells'/>", {
             "method": "POST",
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
         }).then(function (response) {
@@ -53,7 +50,6 @@
             checkStatus();
         });
     }
-
     function checkStatus() {
         console.log("checking status");
         fetch("<c:url value='/api/game/status'/>", {
@@ -69,6 +65,8 @@
             if (game.status === "PLACEMENT" && game.playerActive) {
                 document.getElementById("placement-field").classList.remove("w3-hide");
                 document.getElementById("wait-another").classList.add("w3-hide");
+            } else if (game.status === 'STARTED') {
+                location.href = "<c:url value='/app/game.jsp'/>";
             } else {
                 document.getElementById("placement-field").classList.add("w3-hide");
                 document.getElementById("wait-another").classList.remove("w3-hide");
@@ -76,7 +74,6 @@
             }
         });
     }
-
 </script>
 </body>
 </html>
