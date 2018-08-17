@@ -110,6 +110,18 @@ public class GameStore {
                     return c;
                 }).forEach(c -> em.persist(c));
     }
+    public Optional<Game> getFinish(User user) {
+        return em.createQuery(
+                "select g " +
+                        "from Game g " +
+                        "where g.player1 = :user " +
+                        "   or g.player2 = :user " +
+                        "order by g.id desc", Game.class)
+                .setParameter("user", user)
+                .setMaxResults(1)
+                .getResultStream()
+                .findFirst();
+    }
 
     private void clearField(Game game, User player, boolean targetArea) {
         List<Cell> cells = em.createQuery(

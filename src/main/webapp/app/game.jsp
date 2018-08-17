@@ -95,7 +95,7 @@
                     checkStatus();
                 }, 1000);
             } else if (game.status === "FINISHED") {
-                location.href = "<c:url value='/app/result.jsp'/>";
+                location.href = "<c:url value='/app/finished.jsp'/>";
                 return;
             } else {
                 return;
