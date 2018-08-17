@@ -123,10 +123,9 @@ public class GameApi {
 
     @POST
     @RolesAllowed({"ADMIN", "USER"})
-    @Path("/fire{address}")
+    @Path("/fire/{address}")
     public void doFire(@PathParam("address") String address) {
         log.info("FIRE" + address);
-
 
         User currentUser = userStore.getCurrentUser();
         Optional<Game> game = gameStore.getOpenGameFor(currentUser);
@@ -140,19 +139,27 @@ public class GameApi {
             }
             else {oposCellState=CellState.EMPTY;
             }
-            if (oposCellState.equals(CellState.EMPTY)) {
+            if (oposCellState.equals(CellState.SHIP)) {
+                gameStore.setCellState(g, currentUser, address, true, CellState.HIT);
+                gameStore.setCellState(g, oppostionUser, address, false, CellState.HIT);
+
+            }
+            else if (oposCellState.equals(CellState.EMPTY)){
                 gameStore.setCellState(g, currentUser, address, true, CellState.MISS);
                 gameStore.setCellState(g, oppostionUser, address, false, CellState.MISS);
             }
-            else if (oposCellState.equals(CellState.SHIP)){
-                gameStore.setCellState(g, currentUser, address, true, CellState.HIT);
-                gameStore.setCellState(g, oppostionUser, address, false, CellState.HIT);
+            else {
+                gameStore.setCellState(g, oppostionUser, address, false, CellState.MISS);
+                gameStore.setCellState(g, currentUser, address, true, CellState.MISS);
             }
 
             boolean p1a = g.isPlayer1Active();
             g.setPlayer1Active(!p1a);
             g.setPlayer2Active(p1a);
         });
+
+
+        }
     }
-}
+
 

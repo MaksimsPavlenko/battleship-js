@@ -3,7 +3,6 @@ package lv.ctco.javaschool.game.entity;
 import lombok.Data;
 import lv.ctco.javaschool.auth.entity.domain.User;
 
-import javax.jws.soap.SOAPBinding;
 import javax.persistence.*;
 
 @Data
@@ -34,24 +33,23 @@ public class Game {
         }
     }
 
-    public void setPlayerActive(User player, boolean active) {
+    public void setPlayerActive(User player, boolean isActive) {
         if (player.equals(player1)) {
-            player1Active = active;
+            player1Active = isActive;
         } else if (player.equals(player2)) {
-            player2Active = active;
+            player2Active = isActive;
         } else {
             throw new IllegalArgumentException();
         }
     }
 
-public User getStrike(User player){
-        if (player.equals(player1)){
+
+    public User getStrike(User player) {
+        if (player.equals(player1)) {
             return player2;
-        }
-        else if(player.equals(player2)){
+        } else if (player.equals(player2)) {
             return player1;
-        }
-        else{
+        } else {
             throw new IllegalArgumentException();
         }
     }

@@ -54,6 +54,19 @@ public class GameStore {
                 .findFirst();
     }
 
+    public Optional<Game> getLatestGame(User user) {
+        return em.createQuery(
+                "select g " +
+                        "from Game g " +
+                        "where g.player1 = :user " +
+                        "   or g.player2 = :user " +
+                        "order by g.id desc", Game.class)
+                .setParameter("user", user)
+                .setMaxResults(1)
+                .getResultStream()
+                .findFirst();
+    }
+
     public Optional<Cell> findCell(Game game, User player, String address, boolean targetArea) {
         return em.createQuery(
                 "select c from Cell c " +
@@ -99,7 +112,12 @@ public class GameStore {
     }
 
     private void clearField(Game game, User player, boolean targetArea) {
-        List<Cell> cells = em.createQuery("select c " + "from Cell c " + "where c.game = :game " + "  and c.user = :user " + "  and c.targetArea = :target", Cell.class)
+        List<Cell> cells = em.createQuery(
+                "select c " +
+                        "from Cell c " +
+                        "where c.game = :game " +
+                        "  and c.user = :user " +
+                        "  and c.targetArea = :target", Cell.class)
                 .setParameter("game", game)
                 .setParameter("user", player)
                 .setParameter("target", targetArea)
@@ -108,7 +126,11 @@ public class GameStore {
     }
 
     public List<Cell> getCells(Game game, User player) {
-        return em.createQuery("select c " + "from Cell c " + "where c.game = :game " + "  and c.user = :user ", Cell.class)
+        return em.createQuery(
+                "select c " +
+                        "from Cell c " +
+                        "where c.game = :game " +
+                        "  and c.user = :user ", Cell.class)
                 .setParameter("game", game)
                 .setParameter("user", player)
                 .getResultList();
